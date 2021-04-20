@@ -1,0 +1,19 @@
+{
+    "num-cluster": 1536,
+    "batch-size": 1024,
+    "max-iterator": 1,
+    "binary-dimension": 64,
+    "dataset-path": "../ukbench/ukbench/full/",
+    "index": "index.h5",
+    "angle-scale-path": "angle-scale.h5",
+    "original-cluster-path": "original-cluster-path.pickle",
+    "pca-matrix-path": "pca-matrix.pickle",
+    "tf-path": "tf.pickle",
+    "idf-path": "idf.pickle",
+    "detector": "SIFT",
+    "percentage": 0.25,
+    "angle-delta": 1,
+    "delta-angle": 1,
+    "evaluation-export": "evaluation.csv",
+    "relevant-path": "relevant.json"
+}

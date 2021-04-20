@@ -3,7 +3,7 @@ from angle_scale import AngleScaleReader
 from features_indexer import FeatureIndexerReader
 import numpy as np 
 import sys
-import cv2
+from cv2 import cv2
 from scipy.cluster.vq import vq
 import pickle
 
@@ -11,21 +11,19 @@ MAX_ANGLE = 360
 MIN_ANGLE = 0
 
 class GeometricalConsistency(object):
-    def __init__(self, gray_scaled_image, detector, codebook, distance_ratio=0.7, delta_angle=1):
+    def __init__(self, angle_scale, descriptors , distance_ratio=0.7, delta_angle=1):
          
-        self.__keypoints, self.__descriptors = detector.detectAndCompute(gray_scaled_image, None)
-
-        self.__angle_scale = np.array([(keypoint.angle, keypoint.octave) for keypoint in self.__keypoints])
-        self.__codebook = codebook
+        self.__angle_scale = angle_scale
+        self.__descriptors = descriptors
         self.__distance_ratio = distance_ratio
         self.__delta_angle = delta_angle
 
+
     def score(self, desc, angle_scale):
-        # codes, _ = vq(desc, self.__codebook)
         total_angle = int((MAX_ANGLE - MIN_ANGLE) / self.__delta_angle)
         
         bf = cv2.BFMatcher_create()
-        matches = bf.knnMatch(desc, self.__descriptors, k=2)
+        matches = bf.knnMatch(desc, self.__descriptors, 2)
         angles = np.zeros((total_angle))
         HIGHEST_QUERY_SCALE = np.amax(self.__angle_scale[:, 1])
         HIGHEST_SCALE = np.amax(angle_scale[:, 1])
@@ -38,7 +36,14 @@ class GeometricalConsistency(object):
                 angles[angle_pos] += 1
                 scale_diff = np.abs(np.log(angle_scale[m.queryIdx, 1]) - np.log(self.__angle_scale[m.trainIdx, 1]))
                 scales[int(scale_diff)] += 1
-        return 0.0 if np.sum(angles) == 0 or np.sum(scales) == 0 else np.minimum(np.amax(scales), np.amax(angles))
+
+        # total_scales = np.sum(scales)
+        # total_angles = np.sum(angles)
+        # if total_scales != 0:
+        #     scales = scales / float(total_scales)
+        # if total_angles != 0:
+        #     angles = angles / float(total_angles)
+        return np.minimum(np.amax(scales), np.amax(angles))
 
 if __name__ == "__main__":
     config_value = config.get_config()
@@ -59,7 +64,11 @@ if __name__ == "__main__":
     
     desc_reader = FeatureIndexerReader(config_value['index'])
     
-    consistency = GeometricalConsistency(query_image, config_value['detector'], codebook, 0.7, config_value['delta-angle'])
+    keypoints, descriptors = config_value['detector'].detectAndCompute(query_image, None)
+
+    query_angle_scale = np.array([[keypoint.angle, keypoint.octave] for keypoint in keypoints])
+
+    consistency = GeometricalConsistency(angle_scale, descriptors, 0.7, config_value['delta-angle'])
     final_scores = np.zeros((len(images)))
     #get scores
     for i, image in enumerate(images):
