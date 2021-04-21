@@ -27,7 +27,7 @@ class GeometricalConsistency(object):
         angles = np.zeros((total_angle))
         HIGHEST_QUERY_SCALE = np.amax(self.__angle_scale[:, 1])
         HIGHEST_SCALE = np.amax(angle_scale[:, 1])
-        MAX_SCALE_POS = np.log(np.maximum(HIGHEST_QUERY_SCALE, HIGHEST_SCALE).astype(np.float64))
+        MAX_SCALE_POS = np.log(np.maximum(HIGHEST_QUERY_SCALE, HIGHEST_SCALE).astype(np.float64)) + 1
         scales = np.zeros((int(MAX_SCALE_POS)))
         for m, n in matches:
             if m.distance < self.__distance_ratio * n.distance:
@@ -37,12 +37,6 @@ class GeometricalConsistency(object):
                 scale_diff = np.abs(np.log(angle_scale[m.queryIdx, 1]) - np.log(self.__angle_scale[m.trainIdx, 1]))
                 scales[int(scale_diff)] += 1
 
-        # total_scales = np.sum(scales)
-        # total_angles = np.sum(angles)
-        # if total_scales != 0:
-        #     scales = scales / float(total_scales)
-        # if total_angles != 0:
-        #     angles = angles / float(total_angles)
         return np.minimum(np.amax(scales), np.amax(angles))
 
 if __name__ == "__main__":

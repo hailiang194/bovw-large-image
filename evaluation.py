@@ -60,7 +60,8 @@ if __name__ == "__main__":
         
         #tf_idf matching
         query_tf = query_tf / query_code.shape[0]
-        tf_idf_images, tf_idf_score = search.score_by_tf_idf(query_tf, images, tf, idf)
+        tf_idf_images, tf_idf_score = search.score_by_tf_idf(query_tf, images, tf, idf, 100)
+        tf_idf_accurency = len(set(tf_idf_images).intersection(set(relevant[image])))
 
         #geometrical consistency
         query_angle_scale = np.array([[keypoint.angle, keypoint.octave] for keypoint in keypoints])
@@ -68,4 +69,4 @@ if __name__ == "__main__":
         matching_values = set(relevant[image]).intersection(set(matching_images))
         accurency = len(matching_values)
         with open(config_value['evaluation-export'], 'a') as evaluation_file:
-            print("{},{},{}".format(image, accurency, time.perf_counter() - start_time), file=evaluation_file)
+            print("{},{},{},{}".format(image, tf_idf_accurency, accurency, time.perf_counter() - start_time), file=evaluation_file)

@@ -9,12 +9,14 @@ import sys
 import pickle
 import imutils
 
-def score_by_tf_idf(query_tf, image_labels, tf, idf=None, top=50):
+def score_by_tf_idf(query_tf, image_labels, tf, idf=None, top=100):
     scores = np.zeros((tf.shape[0]))
 
     cosine_simularity = lambda x, y: (x @ y) / (np.linalg.norm(x) * np.linalg.norm(y))
+    # determine_score = lambda x, y: np.linalg.norm(x / np.linalg.norm(x) - y / np.linalg.norm(y))
     for index in range(tf.shape[0]):
         scores[index] = cosine_simularity(query_tf * idf, tf[index, :] * idf)
+        # scores[index] = determine_score(query_tf * idf, tf[index, :] * idf)
 
     image_score = dict(zip(image_labels, scores.tolist()))
     image_score = list(sorted(image_score.items(), key=lambda item: item[1]))    
@@ -36,9 +38,9 @@ if __name__ == "__main__":
     config_value = config.get_config()
     query_image = cv2.imread(sys.argv[1])
     query_image = cv2.cvtColor(query_image, cv2.COLOR_BGRA2GRAY)
-    cv2.imshow("Temp", query_image)
-    cv2.waitKey(0)
-    quit()
+    # cv2.imshow("Temp", query_image)
+    # cv2.waitKey(0)
+    # quit()
     # get image labels
     angle_scale_reader = AngleScaleReader(config_value['angle-scale-path']) 
     image_labels = list(angle_scale_reader.keys())
@@ -73,9 +75,10 @@ if __name__ == "__main__":
     query_tf = query_tf / query_code.shape[0]
 
     tf_idf_labels, tf_idf_score = score_by_tf_idf(query_tf, image_labels, tf, idf)
-    print(tf_idf_labels)
+    print(list(zip(tf_idf_labels, tf_idf_score)))
     #get angle and scale of query_image
     query_angle_scale = np.array([[keypoint.angle, keypoint.octave] for keypoint in keypoints])
     matching_images, matching_scores = geometrical_consistency_remark(query_angle_scale, descriptors, tf_idf_labels, angle_scale_reader, FeatureIndexerReader(config_value['index']))
     print(matching_images)
     print(matching_scores)
+    print(set(tf_idf_labels).intersection({'ukbench00000.jpg','ukbench00001.jpg', 'ukbench00002.jpg', 'ukbench00003.jpg'}))

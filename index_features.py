@@ -18,6 +18,6 @@ if __name__ == "__main__":
         image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
         keypoints, desc = config_value['detector'].detectAndCompute(image, None)
         index_writer.add_image_descriptors(image_file_name, desc)
-        angle_scale = [(keypoint.angle, keypoint.octave) for keypoint in keypoints]
+        angle_scale = [(keypoint.angle, keypoint.size) for keypoint in keypoints]
         angle_scale_writer.insert(image_file_name, np.array(angle_scale))
     print("Completed")
