@@ -45,27 +45,9 @@ if __name__ == "__main__":
         query_image = cv2.imread(config_value['dataset-path'] + image)
         query_image = cv2.cvtColor(query_image, cv2.COLOR_BGRA2GRAY)
 
-        keypoints, descriptors = config_value['detector'].detectAndCompute(query_image, None)
-        # if len(keypoints) <= 1:
-        #     query_image = cv2.equalizeHist(query_image)
-        #     keypoints, descriptors = config_value['detector'].detectAndCompute(query_image, None)
-
-        #get tf of query image
-        query_code, _ = vq(descriptors, codebook) 
-        query_tf = np.zeros((int(config_value['num-cluster'])))
-
-        uniq_code, counts = np.unique(query_code, return_counts=True) 
-        for code, count in zip(uniq_code.tolist(), counts.tolist()):
-            query_tf[code] = count
-        
-        #tf_idf matching
-        query_tf = query_tf / query_code.shape[0]
-        tf_idf_images, tf_idf_score = search.score_by_tf_idf(query_tf, images, tf, idf, 100)
+        tf_idf_images, matching_images = search.search(query_image, config_value['detector'], codebook, tf, idf, desc_reader, angle_scale_reader, 100, 10, config_value['delta-angle']) 
         tf_idf_accurency = len(set(tf_idf_images).intersection(set(relevant[image])))
 
-        #geometrical consistency
-        query_angle_scale = np.array([[keypoint.angle, keypoint.octave] for keypoint in keypoints])
-        matching_images, matching_scores = search.geometrical_consistency_remark(query_angle_scale, descriptors, tf_idf_images, angle_scale_reader, desc_reader)
         matching_values = set(relevant[image]).intersection(set(matching_images))
         accurency = len(matching_values)
         with open(config_value['evaluation-export'], 'a') as evaluation_file:

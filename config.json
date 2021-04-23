@@ -12,8 +12,8 @@
     "idf-path": "idf.pickle",
     "detector": "SIFT",
     "percentage": 0.25,
-    "angle-delta": 1,
-    "delta-angle": 1,
+    "angle-delta": 2,
+    "delta-angle":  2,
     "evaluation-export": "evaluation.csv",
     "relevant-path": "relevant.json"
 }

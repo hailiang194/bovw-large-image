@@ -20,24 +20,32 @@ class GeometricalConsistency(object):
 
 
     def score(self, desc, angle_scale):
-        total_angle = int((MAX_ANGLE - MIN_ANGLE) / self.__delta_angle)
+        total_angle = int((MAX_ANGLE - MIN_ANGLE) / self.__delta_angle) + 1
         
-        bf = cv2.BFMatcher_create()
-        matches = bf.knnMatch(desc, self.__descriptors, 2)
+        bf = cv2.BFMatcher_create(crossCheck=True)
+        # matches = bf.knnMatch(desc, self.__descriptors, 2)
+        matches = bf.match(desc, self.__descriptors)
+        # print(len(matches))
+        # if len(matches) <= 10:
+        #     return 0.0
         angles = np.zeros((total_angle))
         HIGHEST_QUERY_SCALE = np.amax(self.__angle_scale[:, 1])
         HIGHEST_SCALE = np.amax(angle_scale[:, 1])
         MAX_SCALE_POS = np.log(np.maximum(HIGHEST_QUERY_SCALE, HIGHEST_SCALE).astype(np.float64)) + 1
         scales = np.zeros((int(MAX_SCALE_POS)))
-        for m, n in matches:
-            if m.distance < self.__distance_ratio * n.distance:
+        # for m, n in matches:
+        #     if m.distance < self.__distance_ratio * n.distance:
+        for m in matches:
+            # if m.distance < self.__distance_ratio:
+            if True:
                 angle_difference = np.abs(angle_scale[m.queryIdx, 0] - self.__angle_scale[m.trainIdx, 0])
                 angle_pos = int(angle_difference / self.__delta_angle) 
                 angles[angle_pos] += 1
-                scale_diff = np.abs(np.log(angle_scale[m.queryIdx, 1]) - np.log(self.__angle_scale[m.trainIdx, 1]))
+                scale_diff = np.abs(np.log(angle_scale[m.queryIdx, 1]) - np.log(self.__angle_scale[m.trainIdx, 1])) // 2
                 scales[int(scale_diff)] += 1
 
         return np.minimum(np.amax(scales), np.amax(angles))
+
 
 if __name__ == "__main__":
     config_value = config.get_config()
