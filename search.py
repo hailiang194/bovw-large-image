@@ -17,13 +17,14 @@ def compare_final_score(first, second):
 
     return second[1] - first[1]
 
-def score_by_tf_idf(query_tf, image_labels, tf, idf=None, top=100):
+def score_by_tf_idf(query_tf, image_labels, tf, idf=None, index_reader = None, top=100):
     scores = np.zeros((tf.shape[0]))
 
     cosine_simularity = lambda x, y: (x @ y) / (np.linalg.norm(x) * np.linalg.norm(y))
     # determine_score = lambda x, y: np.linalg.norm(x / np.linalg.norm(x) - y / np.linalg.norm(y))
     for index in range(tf.shape[0]):
-        scores[index] = cosine_simularity(query_tf * idf, tf[index, :] * idf)
+        num = index_reader.get(image_labels[index]).shape[0] if not image_labels is None else idf
+        scores[index] = cosine_simularity(query_tf * num , tf[index, :] * num)
         # scores[index] = determine_score(query_tf * idf, tf[index, :] * idf)
 
     image_score = dict(zip(image_labels, scores.tolist()))
@@ -61,19 +62,19 @@ def search(query_image, detector, codebook, tf, idf, desc_reader, angle_scale_re
     for value, count in zip(values.tolist(), counts.tolist()):
         query_tf[value] = count
 
-    query_tf = query_tf / query_code.shape[0]
+    query_tf = query_tf / 1 #query_code.shape[0]
     if debug: print("Term frequence of query image: {}".format(query_tf))
     
     image_labels = list(desc_reader.keys())
     if debug: print("Total database image(s): {}".format(len(image_labels)))
 
-    tf_idf_labels, tf_idf_score = score_by_tf_idf(query_tf, image_labels, tf, idf, tf_idf_score_top)
-    if debug: print("\ntf-idf:\n{}".format(list(zip(tf_idf_labels, tf_idf_score))))
-    query_angle_scale = np.array([[keypoint.angle, keypoint.octave] for keypoint in keypoints])
-    matching_images, matching_scores, pre_score = geometrical_consistency_remark(query_angle_scale, descriptors, tf_idf_labels, angle_scale_reader, desc_reader, image_pre_score=tf_idf_score, top=angle_scale_top, delta_angle=delta_angle)
-    if debug: print("\nweak geometrical consistency:\n {}".format(list(zip(matching_images, matching_scores, pre_score))))
+    tf_idf_labels, tf_idf_score = score_by_tf_idf(query_tf, image_labels, tf, idf, desc_reader, tf_idf_score_top)
+    # if debug: print("\ntf-idf:\n{}".format(list(zip(tf_idf_labels, tf_idf_score))))
+    # query_angle_scale = np.array([[keypoint.angle, keypoint.octave] for keypoint in keypoints])
+    # matching_images, matching_scores, pre_score = geometrical_consistency_remark(query_angle_scale, descriptors, tf_idf_labels, angle_scale_reader, desc_reader, image_pre_score=tf_idf_score, top=angle_scale_top, delta_angle=delta_angle)
+    # if debug: print("\nweak geometrical consistency:\n {}".format(list(zip(matching_images, matching_scores, pre_score))))
     
-    return tf_idf_labels, matching_images
+    return tf_idf_labels, tf_idf_labels[:10]
 
 if __name__ == "__main__":
     config_value = config.get_config()
